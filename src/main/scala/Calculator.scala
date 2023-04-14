@@ -28,14 +28,20 @@ object Calculator {
   }
 
   def squareOfExpression(firstOperand: Double, secondOperand: Double): String = {
-    val lhs = Await.result(execute(Power, Seq(firstOperand + secondOperand, 2)), Duration.Inf)
-    val rhsFirst = Await.result(execute(Power, Seq(firstOperand, 2)), Duration.Inf)
-    val rhsSecond = Await.result(execute(Power, Seq(secondOperand, 2)), Duration.Inf)
-    val rhsThird = Await.result(execute(Power, Seq((2 * firstOperand * secondOperand), 2)), Duration.Inf)
-    val rhs = rhsFirst.head + rhsSecond.head + rhsThird.head
+    val futureOfLHS = for {
+      expression1 <- execute(Power, Seq(firstOperand + secondOperand, 2))
+    } yield expression1.head
 
-    if (lhs.head == rhs) "Equal" else "Not Equal"
+    val futureOfRHS = for {
+      expression2 <- execute(Power, Seq(firstOperand, 2))
+      expression3 <- execute(Power, Seq(secondOperand, 2))
+      expression4 <- execute(Power, Seq((2 * firstOperand * secondOperand), 2))
+    } yield expression2.head + expression3.head + expression4.head
 
+    val lhs = Await.result(futureOfLHS, Duration.Inf)
+    val rhs = Await.result(futureOfRHS, Duration.Inf)
+
+    if (lhs == rhs) "Equal" else "Not Equal"
   }
 
   def find(numbers: Seq[Double]): Future[Seq[Double]] = {
@@ -46,5 +52,15 @@ object Calculator {
     }
 
     Future(numbers.filter(number => conditionToFind(number)))
+  }
+
+  def findAverageAfterChainingOperations(numbers: Seq[Double]): Future[Double] = {
+    val futures = numbers.map { number =>
+      execute(Fibonacci, Seq(number))
+        .flatMap(result => execute(Odd, result))
+        .map(result => result.reduce(_ + _))
+    }
+
+    Future.sequence(futures).map(_.reduce(_ + _) / numbers.length)
   }
 }
