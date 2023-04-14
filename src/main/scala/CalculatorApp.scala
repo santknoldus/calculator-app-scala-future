@@ -46,7 +46,9 @@ object CalculatorApp extends App {
 
   val resultOfSquareOfExpression = Calculator.squareOfExpression(1.0, 2.0)
   val resultOfFind = Await.result(Calculator.find(Seq(1, 2, 3)), Duration.Inf)
+  val resultOfFindAverageAfterChainingOperations = Await.result(Calculator.findAverageAfterChainingOperations(Seq(45,50,55)),Duration.Inf)
 
   println(resultOfSquareOfExpression)
   println(resultOfFind)
+  println(resultOfFindAverageAfterChainingOperations)
 }
